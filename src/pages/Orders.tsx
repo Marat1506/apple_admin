@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { useNotification } from '../context/NotificationContext';
-import { X, Package, User, MapPin, Truck, CreditCard } from 'lucide-react';
+import { X, Package, User, MapPin, Truck } from 'lucide-react';
 
 export default function Orders() {
   const { addNotification } = useNotification();

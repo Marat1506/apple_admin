@@ -6,10 +6,6 @@ interface HeroSettings {
   id: string;
   key: string;
   value: {
-    title: string;
-    subtitle: string;
-    buttonText: string;
-    buttonLink: string;
     image: string | null;
   };
 }
@@ -18,14 +14,7 @@ const HeroSettings: React.FC = () => {
   const { addNotification } = useNotification();
   const [settings, setSettings] = useState<HeroSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    buttonText: '',
-    buttonLink: '',
-  });
 
   useEffect(() => {
     fetchSettings();
@@ -37,12 +26,6 @@ const HeroSettings: React.FC = () => {
       // Handle wrapped response from TransformInterceptor
       const settingsData = response.data.data || response.data;
       setSettings(settingsData);
-      setFormData({
-        title: settingsData.value.title || '',
-        subtitle: settingsData.value.subtitle || '',
-        buttonText: settingsData.value.buttonText || '',
-        buttonLink: settingsData.value.buttonLink || '',
-      });
     } catch (error: any) {
       console.error('Failed to load settings:', error);
       // Показываем ошибку только если это не проблема с авторизацией
@@ -54,21 +37,7 @@ const HeroSettings: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
 
-    try {
-      await api.put('/settings/hero', formData);
-      addNotification('Settings updated successfully', 'success');
-      fetchSettings();
-    } catch (error) {
-      addNotification('Failed to update settings', 'error');
-      console.error('Failed to update settings:', error);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -125,74 +94,7 @@ const HeroSettings: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Settings Form */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold mb-6">Content Settings</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Welcome to Dubliz"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subtitle
-              </label>
-              <textarea
-                value={formData.subtitle}
-                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Discover premium Apple products"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Button Text
-              </label>
-              <input
-                type="text"
-                value={formData.buttonText}
-                onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Shop Now"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Button Link
-              </label>
-              <input
-                type="text"
-                value={formData.buttonLink}
-                onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="/shop"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
-          </form>
-        </div>
-
+      <div className="max-w-2xl">
         {/* Image Upload */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-xl font-semibold mb-6">Hero Image</h2>
@@ -256,11 +158,14 @@ const HeroSettings: React.FC = () => {
             />
           )}
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-4">{formData.title || 'Welcome to Dubliz'}</h1>
-            <p className="text-xl mb-6 opacity-90">{formData.subtitle || 'Discover premium Apple products'}</p>
+            <h1 className="text-4xl font-bold mb-4">Welcome to Dubliz</h1>
+            <p className="text-xl mb-6 opacity-90">Discover premium Apple products</p>
             <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-              {formData.buttonText || 'Shop Now'}
+              Shop Now
             </button>
+            <p className="text-sm mt-4 opacity-75">
+              * Text content is managed through translation files and will display in the user's selected language
+            </p>
           </div>
         </div>
       </div>

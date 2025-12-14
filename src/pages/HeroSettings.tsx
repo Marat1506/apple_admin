@@ -202,7 +202,7 @@ const HeroSettings: React.FC = () => {
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700 mb-2">Current Image:</p>
               <img
-                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${settings.value.image}`}
+                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://88.214.53.6:3001'}${settings.value.image}`}
                 alt="Hero"
                 className="w-full h-48 object-cover rounded-lg border"
               />
@@ -250,7 +250,7 @@ const HeroSettings: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white relative overflow-hidden">
           {settings?.value.image && (
             <img
-              src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${settings.value.image}`}
+              src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://88.214.53.6:3001'}${settings.value.image}`}
               alt="Hero background"
               className="absolute inset-0 w-full h-full object-cover opacity-30"
             />

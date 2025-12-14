@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "http://88.214.53.6:3001/api/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "http://88.214.53.6:3001/uploads/$1"
     }
   ]
 }

@@ -24,7 +24,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
+    // Try to get token from localStorage first, then from cookies
+    let token = localStorage.getItem('admin_token');
+    if (!token) {
+      // Try to get from cookies as fallback
+      const cookies = document.cookie.split(';');
+      const authCookie = cookies.find(cookie => cookie.trim().startsWith('admin_token='));
+      if (authCookie) {
+        token = authCookie.split('=')[1];
+        // Restore to localStorage for consistency
+        localStorage.setItem('admin_token', token);
+      }
+    }
+    
     if (token) {
       fetchUser();
     } else {
@@ -68,12 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     localStorage.setItem('admin_token', access_token);
+    // Also save to cookies for persistence
+    document.cookie = `admin_token=${access_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
     setUser(userData);
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('admin_token');
+    // Also remove from cookies
+    document.cookie = "admin_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setUser(null);
     setIsAuthenticated(false);
     setIsLoading(false);

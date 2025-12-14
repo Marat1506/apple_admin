@@ -170,9 +170,13 @@ export default function Categories() {
         {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-lg shadow p-6">
             <img
-              src={category.imageUrl || 'https://via.placeholder.com/300'}
+              src={category.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}
               alt={category.name}
               className="w-full h-48 object-cover rounded-lg mb-4"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://via.placeholder.com/300x200?text=Image+Not+Found';
+              }}
             />
             <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
             <p className="text-sm text-gray-500 mt-2">{category.description}</p>

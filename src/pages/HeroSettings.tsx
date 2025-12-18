@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useNotification } from '../context/NotificationContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+
 interface HeroSettings {
   id: string;
   key: string;
@@ -25,6 +27,8 @@ const HeroSettings: React.FC = () => {
       const response = await api.get('/settings/hero');
       // Handle wrapped response from TransformInterceptor
       const settingsData = response.data.data || response.data;
+      console.log('Hero settings loaded:', settingsData);
+      console.log('Image URL will be:', `${API_BASE_URL}${settingsData?.value?.image}`);
       setSettings(settingsData);
     } catch (error: any) {
       console.error('Failed to load settings:', error);
@@ -104,9 +108,14 @@ const HeroSettings: React.FC = () => {
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700 mb-2">Current Image:</p>
               <img
-                src={`${settings.value.image}`}
+                src={`${API_BASE_URL}${settings.value.image}`}
                 alt="Hero"
                 className="w-full h-48 object-cover rounded-lg border"
+                onError={(e) => {
+                  console.error('Failed to load image:', `${API_BASE_URL}${settings.value.image}`);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
               />
             </div>
           )}
@@ -152,9 +161,14 @@ const HeroSettings: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white relative overflow-hidden">
           {settings?.value.image && (
             <img
-              src={`${settings.value.image}`}
+              src={`${API_BASE_URL}${settings.value.image}`}
               alt="Hero background"
               className="absolute inset-0 w-full h-full object-cover opacity-30"
+              onError={(e) => {
+                console.error('Failed to load preview image:', `${API_BASE_URL}${settings.value.image}`);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
             />
           )}
           <div className="relative z-10">

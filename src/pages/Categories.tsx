@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Laptop, Smartphone, Tablet, Watch, Glasses, Headphones, Locate, Tv, Speaker, Package } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 
 interface Category {
@@ -9,7 +9,28 @@ interface Category {
   description: string;
   slug: string;
   imageUrl?: string;
+  iconName?: string;
 }
+
+const iconMap = {
+  Laptop,
+  Smartphone,
+  Tablet,
+  Watch,
+  Glasses,
+  Headphones,
+  Locate,
+  Tv,
+  Speaker,
+  Package,
+};
+
+const getIcon = (iconName?: string) => {
+  if (!iconName || !iconMap[iconName as keyof typeof iconMap]) {
+    return Package; // Default icon
+  }
+  return iconMap[iconName as keyof typeof iconMap];
+};
 
 export default function Categories() {
   const { addNotification } = useNotification();
@@ -167,30 +188,14 @@ export default function Categories() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category) => (
+        {categories.map((category) => {
+          const IconComponent = getIcon(category.iconName);
+          return (
           <div key={category.id} className="bg-white rounded-lg shadow p-6">
-            {category.imageUrl ? (
-              <img
-                src={category.imageUrl}
-                alt={category.name}
-                className="w-full h-48 object-cover rounded-lg mb-4"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const placeholder = target.nextElementSibling as HTMLElement;
-                  if (placeholder) placeholder.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div 
-              className={`w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center ${category.imageUrl ? 'hidden' : 'flex'}`}
-              style={{ display: category.imageUrl ? 'none' : 'flex' }}
-            >
-              <div className="text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                </svg>
-                <p className="text-sm">No Image</p>
+            <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+              <div className="text-center text-gray-600">
+                <IconComponent className="w-16 h-16 mx-auto mb-2" />
+                <p className="text-sm font-medium">{category.iconName || 'No Icon'}</p>
               </div>
             </div>
             <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
@@ -212,7 +217,8 @@ export default function Categories() {
               </button>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* Modal */}

@@ -32,12 +32,18 @@ export default function Products() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: 0,
+    price: '',
     categoryId: '',
     images: [''],
-    stock: 0,
+    stock: '',
     featured: false,
     badge: '',
+    specs: {} as Record<string, any>,
+    variants: {
+      colors: [] as string[],
+      storage: [] as string[],
+      versions: [] as string[],
+    },
     translations: {
       en: { name: '', description: '' },
       ru: { name: '', description: '' },
@@ -87,12 +93,18 @@ export default function Products() {
     setFormData({
       name: '',
       description: '',
-      price: 0,
+      price: '',
       categoryId: '',
       images: [''],
-      stock: 0,
+      stock: '',
       featured: false,
       badge: '',
+      specs: {},
+      variants: {
+        colors: [],
+        storage: [],
+        versions: [],
+      },
       translations: {
         en: { name: '', description: '' },
         ru: { name: '', description: '' },
@@ -105,15 +117,31 @@ export default function Products() {
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     const translations = (product as any).translations || {};
+    const specs = (product as any).specs || {};
+    const variants = (product as any).variants || { colors: [], storage: [], versions: [] };
+    
+    // Преобразуем цвета из старого формата (объекты) в новый (строки)
+    let colors = variants.colors || [];
+    if (colors.length > 0 && typeof colors[0] === 'object' && colors[0].name) {
+      // Старый формат: [{ id, name, hex }] -> новый формат: [name]
+      colors = colors.map((color: any) => color.name);
+    }
+    
     setFormData({
       name: product.name,
       description: product.description || '',
-      price: product.price,
+      price: product.price.toString(),
       categoryId: product.categoryId || '',
       images: product.images.length > 0 ? product.images : [''],
-      stock: product.stock,
+      stock: product.stock.toString(),
       featured: product.featured,
       badge: product.badge || '',
+      specs: specs,
+      variants: {
+        colors: colors,
+        storage: variants.storage || [],
+        versions: variants.versions || [],
+      },
       translations: {
         en: translations.en || { name: product.name, description: product.description || '' },
         ru: translations.ru || { name: product.name, description: product.description || '' },
@@ -133,16 +161,31 @@ export default function Products() {
     setSaving(true);
 
     try {
+      // Обрабатываем variants - разделяем строки с запятыми на отдельные элементы
+      const processedVariants = {
+        colors: formData.variants.colors
+          .flatMap(color => color.split(',').map(c => c.trim()))
+          .filter(color => color !== ''),
+        storage: formData.variants.storage
+          .flatMap(storage => storage.split(',').map(s => s.trim()))
+          .filter(storage => storage !== ''),
+        versions: formData.variants.versions
+          .flatMap(version => version.split(',').map(v => v.trim()))
+          .filter(version => version !== ''),
+      };
+
       const dataToSend = {
         name: formData.name,
         description: formData.description,
         slug: generateSlug(formData.name),
         images: formData.images.filter(img => img.trim() !== ''),
-        price: Number(formData.price),
-        stock: Number(formData.stock),
+        price: Number(formData.price) || 0,
+        stock: Number(formData.stock) || 0,
         categoryId: formData.categoryId || undefined,
         featured: formData.featured,
         badge: formData.badge || undefined,
+        specs: formData.specs,
+        variants: processedVariants,
         translations: formData.translations,
       };
 
@@ -318,7 +361,7 @@ export default function Products() {
                     step="0.01"
                     min="0"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0.00"
                     required
@@ -423,7 +466,7 @@ export default function Products() {
                     type="number"
                     min="0"
                     value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0"
                   />
@@ -488,6 +531,232 @@ export default function Products() {
                   <label htmlFor="featured" className="text-sm font-medium text-gray-700">
                     Featured Product
                   </label>
+                </div>
+              </div>
+
+              {/* Product Specifications */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-semibold mb-4">Product Specifications</h3>
+                <div className="space-y-3">
+                  {Object.entries(formData.specs).map(([key, value], index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={key}
+                        onChange={(e) => {
+                          const newSpecs = { ...formData.specs };
+                          delete newSpecs[key];
+                          newSpecs[e.target.value] = value;
+                          setFormData({ ...formData, specs: newSpecs });
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Specification name (e.g., Display, Processor)"
+                      />
+                      <input
+                        type="text"
+                        value={value as string}
+                        onChange={(e) => {
+                          const newSpecs = { ...formData.specs };
+                          newSpecs[key] = e.target.value;
+                          setFormData({ ...formData, specs: newSpecs });
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Specification value"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSpecs = { ...formData.specs };
+                          delete newSpecs[key];
+                          setFormData({ ...formData, specs: newSpecs });
+                        }}
+                        className="px-3 py-2 text-red-600 hover:text-red-800"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newSpecs = { ...formData.specs };
+                      newSpecs[`spec_${Date.now()}`] = '';
+                      setFormData({ ...formData, specs: newSpecs });
+                    }}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    + Add specification
+                  </button>
+                </div>
+              </div>
+
+              {/* Product Variants */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
+                
+                {/* Storage Options */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Storage Options
+                  </label>
+                  <div className="space-y-2">
+                    {formData.variants.storage.map((storage, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={storage}
+                          onChange={(e) => {
+                            const newStorage = [...formData.variants.storage];
+                            newStorage[index] = e.target.value;
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, storage: newStorage }
+                            });
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g., 128GB, 256GB, 512GB or multiple: 128GB, 256GB"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newStorage = formData.variants.storage.filter((_, i) => i !== index);
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, storage: newStorage }
+                            });
+                          }}
+                          className="px-3 py-2 text-red-600 hover:text-red-800"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          variants: { 
+                            ...formData.variants, 
+                            storage: [...formData.variants.storage, ''] 
+                          }
+                        });
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      + Add storage option
+                    </button>
+                  </div>
+                </div>
+
+                {/* Colors */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Color Options
+                  </label>
+                  <div className="space-y-2">
+                    {formData.variants.colors.map((color, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={color}
+                          onChange={(e) => {
+                            const newColors = [...formData.variants.colors];
+                            newColors[index] = e.target.value;
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, colors: newColors }
+                            });
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Color name (e.g., Space Gray, Silver, Gold) or multiple: Silver, Gold, Red"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newColors = formData.variants.colors.filter((_, i) => i !== index);
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, colors: newColors }
+                            });
+                          }}
+                          className="px-3 py-2 text-red-600 hover:text-red-800"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          variants: { 
+                            ...formData.variants, 
+                            colors: [...formData.variants.colors, ''] 
+                          }
+                        });
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      + Add color option
+                    </button>
+                  </div>
+                </div>
+
+                {/* Versions */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Versions
+                  </label>
+                  <div className="space-y-2">
+                    {formData.variants.versions.map((version, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={version}
+                          onChange={(e) => {
+                            const newVersions = [...formData.variants.versions];
+                            newVersions[index] = e.target.value;
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, versions: newVersions }
+                            });
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g., Standard, Pro, Max or multiple: Standard, Pro"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVersions = formData.variants.versions.filter((_, i) => i !== index);
+                            setFormData({
+                              ...formData,
+                              variants: { ...formData.variants, versions: newVersions }
+                            });
+                          }}
+                          className="px-3 py-2 text-red-600 hover:text-red-800"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          variants: { 
+                            ...formData.variants, 
+                            versions: [...formData.variants.versions, ''] 
+                          }
+                        });
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      + Add version
+                    </button>
+                  </div>
                 </div>
               </div>
 

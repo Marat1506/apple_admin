@@ -7,6 +7,8 @@ import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Categories from './pages/Categories';
 import HeroSettings from './pages/HeroSettings';
+import FAQ from './pages/FAQ';
+import AboutUs from './pages/AboutUs';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +45,8 @@ function App() {
               <Route path="orders" element={<Orders />} />
               <Route path="categories" element={<Categories />} />
               <Route path="hero-settings" element={<HeroSettings />} />
+              <Route path="faq" element={<FAQ />} />
+              <Route path="about-us" element={<AboutUs />} />
             </Route>
           </Routes>
         </BrowserRouter>

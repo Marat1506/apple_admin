@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Package, ShoppingCart, FolderTree, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, FolderTree, Settings, LogOut, HelpCircle, Info } from 'lucide-react';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -12,6 +12,8 @@ export default function Layout() {
     { name: 'Orders', href: '/orders', icon: ShoppingCart },
     { name: 'Categories', href: '/categories', icon: FolderTree },
     { name: 'Hero Settings', href: '/hero-settings', icon: Settings },
+    { name: 'FAQ', href: '/faq', icon: HelpCircle },
+    { name: 'About Us', href: '/about-us', icon: Info },
   ];
 
   return (

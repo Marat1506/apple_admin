@@ -29,6 +29,7 @@ export default function Products() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -232,6 +233,55 @@ export default function Products() {
       ...formData,
       images: newImages
     });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validate files
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith('image/')) {
+        addNotification('Please select only image files', 'error');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        addNotification('Image size must be less than 5MB', 'error');
+        return;
+      }
+    }
+
+    setUploadingImages(true);
+
+    try {
+      const formDataToSend = new FormData();
+      Array.from(files).forEach((file) => {
+        formDataToSend.append('images', file);
+      });
+
+      const response = await api.post('/products/images', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploadedImages = response.data.data?.images || response.data.images || [];
+      const currentImages = formData.images.filter(img => img !== '');
+      setFormData({
+        ...formData,
+        images: [...currentImages, ...uploadedImages]
+      });
+
+      addNotification(`${uploadedImages.length} image(s) uploaded successfully`, 'success');
+    } catch (error) {
+      addNotification('Failed to upload images', 'error');
+      console.error('Failed to upload images:', error);
+    } finally {
+      setUploadingImages(false);
+      // Reset input
+      e.target.value = '';
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -477,33 +527,96 @@ export default function Products() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Images
                 </label>
-                {formData.images.map((image, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                
+                {/* File Upload */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Images
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                     <input
-                      type="url"
-                      value={image}
-                      onChange={(e) => updateImageField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://example.com/image.jpg"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      disabled={uploadingImages}
+                      className="hidden"
+                      id="product-images-upload"
                     />
-                    {formData.images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeImageField(index)}
-                        className="px-3 py-2 text-red-600 hover:text-red-800"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                    <label
+                      htmlFor="product-images-upload"
+                      className={`cursor-pointer ${uploadingImages ? 'opacity-50' : ''}`}
+                    >
+                      <div className="text-gray-600">
+                        <svg className="mx-auto h-8 w-8 mb-2" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <p className="text-sm">
+                          {uploadingImages ? 'Uploading...' : 'Click to upload or drag and drop'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PNG, JPG, GIF up to 5MB each (multiple files supported)
+                        </p>
+                      </div>
+                    </label>
                   </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addImageField}
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  + Add another image
-                </button>
+                </div>
+
+                {/* Image URLs (for external images) */}
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Or enter image URLs
+                  </label>
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="flex gap-2 mb-2">
+                      <input
+                        type="url"
+                        value={image}
+                        onChange={(e) => updateImageField(index, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                      {formData.images.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeImageField(index)}
+                          className="px-3 py-2 text-red-600 hover:text-red-800"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addImageField}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    + Add another URL
+                  </button>
+                </div>
+
+                {/* Preview uploaded images */}
+                {formData.images.filter(img => img !== '').length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Preview ({formData.images.filter(img => img !== '').length} image(s)):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.images.filter(img => img !== '').map((image, index) => (
+                        <div key={index} className="relative w-20 h-20 border border-gray-300 rounded overflow-hidden">
+                          <img
+                            src={image.startsWith('http') ? image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${image}`}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

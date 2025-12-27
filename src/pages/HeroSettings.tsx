@@ -9,6 +9,8 @@ interface HeroSettings {
   key: string;
   value: {
     image: string | null;
+    imageDesktop: string | null;
+    imageMobile: string | null;
   };
 }
 
@@ -43,7 +45,7 @@ const HeroSettings: React.FC = () => {
 
 
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -64,6 +66,7 @@ const HeroSettings: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('image', file);
+      formData.append('type', type);
 
       await api.post('/settings/hero/image', formData, {
         headers: {
@@ -71,7 +74,7 @@ const HeroSettings: React.FC = () => {
         },
       });
 
-      addNotification('Image uploaded successfully', 'success');
+      addNotification(`${type === 'desktop' ? 'Desktop' : 'Mobile'} image uploaded successfully`, 'success');
       fetchSettings();
     } catch (error) {
       addNotification('Failed to upload image', 'error');
@@ -98,21 +101,21 @@ const HeroSettings: React.FC = () => {
         </p>
       </div>
 
-      <div className="max-w-2xl">
-        {/* Image Upload */}
+      <div className="max-w-2xl space-y-6">
+        {/* Desktop Image Upload */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold mb-6">Hero Image</h2>
+          <h2 className="text-xl font-semibold mb-6">Desktop Hero Image</h2>
           
           {/* Current Image */}
-          {settings?.value.image && (
+          {settings?.value.imageDesktop && (
             <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">Current Image:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Current Desktop Image:</p>
               <img
-                src={`${API_BASE_URL}${settings.value.image}`}
-                alt="Hero"
+                src={`${API_BASE_URL}${settings.value.imageDesktop}`}
+                alt="Hero Desktop"
                 className="w-full h-48 object-cover rounded-lg border"
                 onError={(e) => {
-                  console.error('Failed to load image:', `${API_BASE_URL}${settings.value.image}`);
+                  console.error('Failed to load image:', `${API_BASE_URL}${settings.value.imageDesktop}`);
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                 }}
@@ -123,19 +126,74 @@ const HeroSettings: React.FC = () => {
           {/* Upload New Image */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload New Image
+              Upload Desktop Image
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageUpload}
+                onChange={(e) => handleImageUpload(e, 'desktop')}
                 disabled={uploading}
                 className="hidden"
-                id="image-upload"
+                id="desktop-image-upload"
               />
               <label
-                htmlFor="image-upload"
+                htmlFor="desktop-image-upload"
+                className={`cursor-pointer ${uploading ? 'opacity-50' : ''}`}
+              >
+                <div className="text-gray-600">
+                  <svg className="mx-auto h-12 w-12 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <p className="text-sm">
+                    {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    PNG, JPG, GIF up to 5MB
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Image Upload */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-xl font-semibold mb-6">Mobile Hero Image</h2>
+          
+          {/* Current Image */}
+          {settings?.value.imageMobile && (
+            <div className="mb-6">
+              <p className="text-sm font-medium text-gray-700 mb-2">Current Mobile Image:</p>
+              <img
+                src={`${API_BASE_URL}${settings.value.imageMobile}`}
+                alt="Hero Mobile"
+                className="w-full h-48 object-cover rounded-lg border"
+                onError={(e) => {
+                  console.error('Failed to load image:', `${API_BASE_URL}${settings.value.imageMobile}`);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
+          {/* Upload New Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Mobile Image
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e, 'mobile')}
+                disabled={uploading}
+                className="hidden"
+                id="mobile-image-upload"
+              />
+              <label
+                htmlFor="mobile-image-upload"
                 className={`cursor-pointer ${uploading ? 'opacity-50' : ''}`}
               >
                 <div className="text-gray-600">
@@ -158,29 +216,60 @@ const HeroSettings: React.FC = () => {
       {/* Preview */}
       <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-xl font-semibold mb-6">Preview</h2>
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white relative overflow-hidden">
-          {settings?.value.image && (
-            <img
-              src={`${API_BASE_URL}${settings.value.image}`}
-              alt="Hero background"
-              className="absolute inset-0 w-full h-full object-cover opacity-30"
-              onError={(e) => {
-                console.error('Failed to load preview image:', `${API_BASE_URL}${settings.value.image}`);
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          )}
-          <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-4">Welcome to Dubliz</h1>
-            <p className="text-xl mb-6 opacity-90">Discover premium Apple products</p>
-            <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-              Shop Now
-            </button>
-            <p className="text-sm mt-4 opacity-75">
-              * Text content is managed through translation files and will display in the user's selected language
-            </p>
+        <div className="space-y-4">
+          {/* Desktop Preview */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Desktop Preview</h3>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white relative overflow-hidden">
+              {settings?.value.imageDesktop && (
+                <img
+                  src={`${API_BASE_URL}${settings.value.imageDesktop}`}
+                  alt="Hero background desktop"
+                  className="absolute inset-0 w-full h-full object-cover opacity-30"
+                  onError={(e) => {
+                    console.error('Failed to load preview image:', `${API_BASE_URL}${settings.value.imageDesktop}`);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              )}
+              <div className="relative z-10">
+                <h1 className="text-4xl font-bold mb-4">Welcome to Dubliz</h1>
+                <p className="text-xl mb-6 opacity-90">Discover premium Apple products</p>
+                <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                  Shop Now
+                </button>
+              </div>
+            </div>
           </div>
+          {/* Mobile Preview */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Mobile Preview</h3>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white relative overflow-hidden max-w-sm">
+              {settings?.value.imageMobile && (
+                <img
+                  src={`${API_BASE_URL}${settings.value.imageMobile}`}
+                  alt="Hero background mobile"
+                  className="absolute inset-0 w-full h-full object-cover opacity-30"
+                  onError={(e) => {
+                    console.error('Failed to load preview image:', `${API_BASE_URL}${settings.value.imageMobile}`);
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              )}
+              <div className="relative z-10">
+                <h1 className="text-2xl font-bold mb-4">Welcome to Dubliz</h1>
+                <p className="text-lg mb-6 opacity-90">Discover premium Apple products</p>
+                <button className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm">
+                  Shop Now
+                </button>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-4">
+            * Text content is managed through translation files and will display in the user's selected language
+          </p>
         </div>
       </div>
     </div>
